@@ -1,0 +1,57 @@
+package com.mygame.flappy;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+public class Bird {
+    public float x, y;
+    public float width = 80;
+    public float height = 60;
+
+    private float velocityY = 0;
+    private static final float GRAVITY = -1200f;
+    private static final float JUMP = 450f;
+
+    private Animation<TextureRegion> flyAnimation;
+    private float stateTime = 0;
+
+    public Bird(float x, float y) {
+        this.x = x;
+        this.y = y;
+
+        Texture bird0 = new Texture("bird/bird0.png");
+        Texture bird1 = new Texture("bird/bird1.png");
+        Texture bird2 = new Texture("bird/bird2.png");
+
+        TextureRegion[] frames = new TextureRegion[]{
+            new TextureRegion(bird0),
+            new TextureRegion(bird1),
+            new TextureRegion(bird2)
+        };
+
+        flyAnimation = new Animation<>(0.15f, frames);
+        flyAnimation.setPlayMode(Animation.PlayMode.LOOP);
+    }
+
+    public void update(float delta) {
+        stateTime += delta;
+        velocityY += GRAVITY * delta;
+        y += velocityY * delta;
+
+        if (Gdx.input.justTouched()) {
+            velocityY = JUMP;
+        }
+    }
+
+    public void render(SpriteBatch batch) {
+        TextureRegion frame = flyAnimation.getKeyFrame(stateTime);
+        batch.draw(frame, x, y, width, height);
+    }
+
+    public void dispose() {
+        // Текстуры анимации освобождаются автоматически
+    }
+}
