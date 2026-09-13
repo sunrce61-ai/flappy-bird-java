@@ -1,0 +1,83 @@
+package com.mygame.flappy;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+
+public class MainMenuScreen implements Screen {
+    private final FlappyBird game;
+    private SpriteBatch batch;
+    private Texture background;
+    private Texture buttonTexture;
+    private BitmapFont font;
+
+    private float playBtnX, playBtnY, playBtnW, playBtnH;
+    private float exitBtnX, exitBtnY, exitBtnW, exitBtnH;
+
+    public MainMenuScreen(FlappyBird game) {
+        this.game = game;
+    }
+
+    @Override
+    public void show() {
+        batch = new SpriteBatch();
+        background = new Texture("background/game_bg.png");
+        buttonTexture = new Texture("button/button_bg.png");
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+
+        float sw = Gdx.graphics.getWidth();
+        float sh = Gdx.graphics.getHeight();
+
+        playBtnW = 400; playBtnH = 120;
+        playBtnX = (sw - playBtnW) / 2;
+        playBtnY = sh / 2 + 50;
+
+        exitBtnW = 400; exitBtnH = 120;
+        exitBtnX = (sw - exitBtnW) / 2;
+        exitBtnY = sh / 2 - 150;
+    }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0, 0, 0, 1);
+
+        batch.begin();
+        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(buttonTexture, playBtnX, playBtnY, playBtnW, playBtnH);
+        batch.draw(buttonTexture, exitBtnX, exitBtnY, exitBtnW, exitBtnH);
+
+        font.draw(batch, "FLAPPY BIRD", Gdx.graphics.getWidth() / 2f - 150, Gdx.graphics.getHeight() - 100);
+        font.draw(batch, "ИГРАТЬ", playBtnX + 120, playBtnY + 75);
+        font.draw(batch, "ВЫХОД", exitBtnX + 120, exitBtnY + 75);
+        batch.end();
+
+        if (Gdx.input.justTouched()) {
+            float tx = Gdx.input.getX();
+            float ty = Gdx.graphics.getHeight() - Gdx.input.getY();
+
+            if (tx >= playBtnX && tx <= playBtnX + playBtnW && ty >= playBtnY && ty <= playBtnY + playBtnH) {
+                game.setScreen(new GameScreen(game));
+            }
+            if (tx >= exitBtnX && tx <= exitBtnX + exitBtnW && ty >= exitBtnY && ty <= exitBtnY + exitBtnH) {
+                Gdx.app.exit();
+            }
+        }
+    }
+
+    @Override public void resize(int width, int height) {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        background.dispose();
+        buttonTexture.dispose();
+        font.dispose();
+    }
+}
