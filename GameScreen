@@ -1,0 +1,169 @@
+package com.mygame.flappy;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.TimeUtils;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+public class GameScreen implements Screen {
+    private final FlappyBird game;
+    private SpriteBatch batch;
+    private Texture background;
+    private Texture tubeTexture;
+    private Texture tubeFlippedTexture;
+    private BitmapFont font;
+
+    private Bird bird;
+    private ArrayList<TubePair> tubes;
+    private Random random;
+
+    private long lastTubeTime;
+    private int score;
+    private boolean gameOver;
+
+    private float bgOffset = 0;
+
+    private static final int TUBE_GAP = 350;
+    private static final int TUBE_WIDTH = 120;
+    private static final int TUBE_SPEED = 300;
+    private static final int TUBE_INTERVAL = 1500;
+
+    public GameScreen(FlappyBird game) {
+        this.game = game;
+    }
+
+    @Override
+    public void show() {
+        batch = new SpriteBatch();
+        background = new Texture("background/game_bg.png");
+        tubeTexture = new Texture("tube/tube.png");
+        tubeFlippedTexture = new Texture("tube/tube_flipped.png");
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+
+        bird = new Bird(Gdx.graphics.getWidth() / 2f - 40, Gdx.graphics.getHeight() / 2f);
+        tubes = new ArrayList<>();
+        random = new Random();
+        score = 0;
+        gameOver = false;
+        lastTubeTime = TimeUtils.millis();
+    }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0, 0, 0, 1);
+
+        if (!gameOver) {
+            update(delta);
+        }
+
+        batch.begin();
+        batch.draw(background, bgOffset, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(background, bgOffset + Gdx.graphics.getWidth(), 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        for (TubePair tube : tubes) {
+            batch.draw(tubeFlippedTexture, tube.x, tube.topY, TUBE_WIDTH, tube.topHeight);
+            batch.draw(tubeTexture, tube.x, tube.bottomY, TUBE_WIDTH, tube.bottomHeight);
+        }
+
+        bird.render(batch);
+
+        font.draw(batch, "Очки: " + score, 30, Gdx.graphics.getHeight() - 30);
+        batch.end();
+    }
+
+    private void update(float delta) {
+        bgOffset -= TUBE_SPEED * delta;
+        if (bgOffset <= -Gdx.graphics.getWidth()) {
+            bgOffset = 0;
+        }
+
+        bird.update(delta);
+
+        if (bird.y <= 0 || bird.y + bird.height >= Gdx.graphics.getHeight()) {
+            gameOver = true;
+            game.setScreen(new RestartScreen(game, score));
+            return;
+        }
+
+        if (TimeUtils.millis() - lastTubeTime > TUBE_INTERVAL) {
+            spawnTube();
+            lastTubeTime = TimeUtils.millis();
+        }
+
+        for (int i = 0; i < tubes.size(); i++) {
+            TubePair tube = tubes.get(i);
+            tube.x -= TUBE_SPEED * delta;
+
+            if (bird.x + bird.width > tube.x && bird.x < tube.x + TUBE_WIDTH) {
+                if (bird.y < tube.bottomHeight || bird.y + bird.height > tube.bottomHeight + TUBE_GAP) {
+                    gameOver = true;
+                    game.setScreen(new RestartScreen(game, score));
+                    return;
+                }
+            }
+
+            if (!tube.passed && tube.x + TUBE_WIDTH < bird.x) {
+                tube.passed = true;
+                score++;
+            }
+
+            if (tube.x + TUBE_WIDTH < 0) {
+                tubes.remove(i);
+                i--;
+            }
+        }
+    }
+
+    private void spawnTube() {
+        int screenHeight = Gdx.graphics.getHeight();
+        int minBottom = 100;
+        int maxBottom = screenHeight - TUBE_GAP - 100;
+
+        if (maxBottom <= minBottom) {
+            maxBottom = minBottom + 1;
+        }
+
+        int bottomHeight = minBottom + random.nextInt(maxBottom - minBottom);
+        int topHeight = screenHeight - bottomHeight - TUBE_GAP;
+
+        tubes.add(new TubePair(Gdx.graphics.getWidth(), bottomHeight, topHeight));
+    }
+
+    @Override public void resize(int width, int height) {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        background.dispose();
+        tubeTexture.dispose();
+        tubeFlippedTexture.dispose();
+        font.dispose();
+        bird.dispose();
+    }
+
+    private static class TubePair {
+        float x;
+        float bottomHeight;
+        float topHeight;
+        float bottomY = 0;
+        float topY;
+        boolean passed = false;
+
+        TubePair(float x, float bottomHeight, float topHeight) {
+            this.x = x;
+            this.bottomHeight = bottomHeight;
+            this.topHeight = topHeight;
+            this.topY = bottomHeight + TUBE_GAP;
+        }
+    }
+}
