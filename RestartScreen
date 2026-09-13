@@ -1,0 +1,86 @@
+package com.mygame.flappy;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+
+public class RestartScreen implements Screen {
+    private final FlappyBird game;
+    private final int score;
+    private SpriteBatch batch;
+    private Texture background;
+    private Texture buttonTexture;
+    private BitmapFont font;
+
+    private float restartBtnX, restartBtnY, restartBtnW, restartBtnH;
+    private float menuBtnX, menuBtnY, menuBtnW, menuBtnH;
+
+    public RestartScreen(FlappyBird game, int score) {
+        this.game = game;
+        this.score = score;
+    }
+
+    @Override
+    public void show() {
+        batch = new SpriteBatch();
+        background = new Texture("background/restart_bg.png");
+        buttonTexture = new Texture("button/button_bg.png");
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+
+        float sw = Gdx.graphics.getWidth();
+        float sh = Gdx.graphics.getHeight();
+
+        restartBtnW = 400; restartBtnH = 120;
+        restartBtnX = (sw - restartBtnW) / 2;
+        restartBtnY = sh / 2 + 50;
+
+        menuBtnW = 400; menuBtnH = 120;
+        menuBtnX = (sw - menuBtnW) / 2;
+        menuBtnY = sh / 2 - 150;
+    }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0, 0, 0, 1);
+
+        batch.begin();
+        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(buttonTexture, restartBtnX, restartBtnY, restartBtnW, restartBtnH);
+        batch.draw(buttonTexture, menuBtnX, menuBtnY, menuBtnW, menuBtnH);
+
+        font.draw(batch, "ИГРА ОКОНЧЕНА", Gdx.graphics.getWidth() / 2f - 170, Gdx.graphics.getHeight() - 100);
+        font.draw(batch, "Очки: " + score, Gdx.graphics.getWidth() / 2f - 80, Gdx.graphics.getHeight() - 180);
+        font.draw(batch, "ЗАНОВО", restartBtnX + 120, restartBtnY + 75);
+        font.draw(batch, "В МЕНЮ", menuBtnX + 130, menuBtnY + 75);
+        batch.end();
+
+        if (Gdx.input.justTouched()) {
+            float tx = Gdx.input.getX();
+            float ty = Gdx.graphics.getHeight() - Gdx.input.getY();
+
+            if (tx >= restartBtnX && tx <= restartBtnX + restartBtnW && ty >= restartBtnY && ty <= restartBtnY + restartBtnH) {
+                game.setScreen(new GameScreen(game));
+            }
+            if (tx >= menuBtnX && tx <= menuBtnX + menuBtnW && ty >= menuBtnY && ty <= menuBtnY + menuBtnH) {
+                game.setScreen(new MainMenuScreen(game));
+            }
+        }
+    }
+
+    @Override public void resize(int width, int height) {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        background.dispose();
+        buttonTexture.dispose();
+        font.dispose();
+    }
+}
