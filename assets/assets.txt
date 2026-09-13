@@ -1,0 +1,9 @@
+background/game_bg.png
+background/restart_bg.png
+bird/bird0.png
+bird/bird1.png
+bird/bird2.png
+button/button_bg.png
+libgdx.png
+tube/tube.png
+tube/tube_flipped.png
